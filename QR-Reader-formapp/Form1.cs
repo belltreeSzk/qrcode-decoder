@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using OpenCvSharp;
-
-using Microsoft.Win32;
-using static System.Console;
 using OpenCvSharp.Extensions;
 using ZXing;
 
@@ -25,29 +17,31 @@ namespace QR_Reader_formapp
         VideoCapture capture;
         Bitmap bmp;
         Graphics graphic;
-        ZXing.BarcodeReader reader;
-        string prevData;
+        BarcodeReader reader;
+        String prevData;
 
         public Form1()
         {
             InitializeComponent();
 
-            //カメラ画像取得用のVideoCapture作成
-            capture = new VideoCapture(0); // 0がインカメ, 1以降がウェブカメラ
-            if (!capture.IsOpened())
-            {
-                capture = new VideoCapture(1); // 0がインカメ, 1以降がウェブカメラ
+            for (int i = 0, max =10; i < max; i++) {
+                //カメラ画像取得用のVideoCapture作成
+                capture = new VideoCapture(i); // 0がインカメ, 1以降がウェブカメラ
+                if (capture.IsOpened())
+                {
+                    break;
+                }
             }
+            //カメラ画像取得用のVideoCapture作成
             if (!capture.IsOpened())
             {
                 MessageBox.Show("camera was not found!");
-                this.Close();
+                Close();
                 throw new Exception();
             }
+
             capture.FrameWidth = WIDTH;
             capture.FrameHeight = HEIGHT;
-
-            reader = new ZXing.BarcodeReader();
 
             //取得先のMat作成
             frame = new Mat(HEIGHT, WIDTH, MatType.CV_8UC3);
@@ -64,6 +58,9 @@ namespace QR_Reader_formapp
 
             //画像取得スレッド開始
             backgroundWorker1.RunWorkerAsync();
+
+            // バーコードリーダーのインスタンスを作成
+            reader = new BarcodeReader();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -83,7 +80,6 @@ namespace QR_Reader_formapp
                 //画像取得
                 capture.Grab();
                 NativeMethods.videoio_VideoCapture_operatorRightShift_Mat(capture.CvPtr, frame.CvPtr);
-
                 bw.ReportProgress(0);
             }
         }
@@ -92,57 +88,43 @@ namespace QR_Reader_formapp
         {
             //描画
             graphic.DrawImage(bmp, 0, 0, frame.Cols, frame.Rows);
-            scanQRcode();
+            String text = scanQRcode();
+            Save(text);
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string userProfilePath = Environment.GetEnvironmentVariable("UserProfile");
-            string filePath = userProfilePath + @"\Desktop\cap.bmp";
-            frame.SaveImage(filePath);
-           
-            using (Mat cap = new Mat(filePath))
-            {
-                //保存されたキャプチャ画像の出力
-                Cv2.ImShow("test1", frame);
-            }
-        }
-
-        private void scanQRcode() {
-            string userProfilePath = Environment.GetEnvironmentVariable("UserProfile");
-
-            if (reader == null) {
-                return;
-            }
-            if (frame == null) {
-                return;
-            }
-            if (frame.ToBitmap() == null)
-            {
-                return;
-            }
-            // QRコードの解析
-            //ZXingに渡すのはBitmap
+        /// <summary>
+        /// QRコードの解析
+        /// </summary>
+        private String scanQRcode() {
+            String text = null;
             try {
-                ZXing.Result result = reader.Decode(frame.ToBitmap());
-                var text = result == null ? DateTime.Now.ToString() : result.Text;
-                label2.Text = text;
-                if (result != null && prevData != result.Text)
-                {
-                    File.AppendAllText(userProfilePath + @"\Desktop\log.txt", text + Environment.NewLine);
-                    // パラメータを指定して実行
-                    System.Diagnostics.Process.Start("notepad.exe", userProfilePath + @"\Desktop\log.txt");
+                //    Bitmap image = new Bitmap(userProfilePath + @"\Desktop\sample-qr-3.png");
+                //    ZXing.Result result = reader.Decode(image);
+                Result result = reader.Decode(frame.ToBitmap());
+                if (result != null && prevData != result.Text) {
+                    text = result.Text;
                     prevData = text;
                 }
                
             } catch (Exception exception) {
                 throw exception;
             }
+            return text;
         }
 
-        private void label2_Click(object sender, EventArgs e)
-        {
-
+        /// <summary>
+        /// データの保存
+        /// </summary>
+        /// <param name="text"></param>
+        private void Save(String text) {
+            if (text == null) {
+                return;
+            }
+            String userProfilePath = Environment.GetEnvironmentVariable("UserProfile");
+            String logPath = @"\Desktop\log.txt";
+            File.AppendAllText(userProfilePath + logPath, text + Environment.NewLine);
+            // メモ帳を開く
+            System.Diagnostics.Process.Start("notepad.exe", userProfilePath + logPath);
         }
     }
 }

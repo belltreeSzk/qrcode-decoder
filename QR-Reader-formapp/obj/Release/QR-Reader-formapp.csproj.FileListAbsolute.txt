@@ -27,3 +27,4 @@ C:\Users\Takashi\source\repos\QR-Reader-formapp\QR-Reader-formapp\obj\Release\QR
 C:\Users\Takashi\source\repos\QR-Reader-formapp\QR-Reader-formapp\obj\Release\QR-Reader-formapp.csproj.CopyComplete
 C:\Users\Takashi\source\repos\QR-Reader-formapp\QR-Reader-formapp\obj\Release\QR-Reader-formapp.exe
 C:\Users\Takashi\source\repos\QR-Reader-formapp\QR-Reader-formapp\obj\Release\QR-Reader-formapp.pdb
+C:\Users\Takashi\source\repos\QR-Reader-formapp\QR-Reader-formapp\obj\Release\QR-Reader-formapp.csprojAssemblyReference.cache
